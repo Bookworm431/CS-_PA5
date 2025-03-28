@@ -4,21 +4,26 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 //struct
 struct tree_node {
     int data;
+    char *name;
     struct tree_node *left;
     struct tree_node *right;
 };
 
 //function calls
-struct tree_node *create_node(int val);
-void inorder(struct tree_node *current_ptr);
-struct tree_node* insert(struct tree_node *root,
-struct tree_node *element);
-int add(struct tree_node *current_ptr);
-int find(struct tree_node *current_ptr, int val);
+//useful ones
+// add(struct tree_node *current_ptr);
+int find(struct tree_node *current_ptr, char* name);
+struct tree_node* insert(struct tree_node *root, struct tree_node *element);
+
+//struct tree_node* delete(struct tree_node* root, char name[], int numTickets);
+
+struct tree_node *create_node(char* name, int numTickets);
+/*void inorder(struct tree_node *current_ptr);
 struct tree_node* parent(struct tree_node *root, struct tree_node *node);
 struct tree_node* minVal(struct tree_node *root);
 struct tree_node* maxVal(struct tree_node *root);
@@ -26,82 +31,84 @@ int isLeaf(struct tree_node *node);
 int hasOnlyLeftChild(struct tree_node *node);
 int hasOnlyRightChild(struct tree_node *node);
 struct tree_node* findNode(struct tree_node *current_ptr, int value);
-struct tree_node* delete(struct tree_node* root, int value);
 struct tree_node* q6(struct tree_node* root, int x);
 void what(struct tree_node *root, int val);
 int numnodes(struct tree_node* root);
 int findKthSmallest(struct tree_node* root, int k);
-int menu();
-
+*/
 int main() {
     struct tree_node *my_root=NULL, *temp_node;
-    int done = 0,ans = 1, val, q6data;
-    int num_commands;
+    int done = 0, val, q6data;
+    char command[31];
+    char name[31];
+    int num_commands, numTickets;
     scanf("%d", &num_commands);
-    ans = menu();
     //takes in information
-    while (ans < num_commands) {
-        if (ans == 1) {
-            //get value to insert
-            printf("What value would you like to insert?");
-            scanf("%d", &val);
+    for (int i = 0; i < num_commands; i++) {
+        scanf("%s", command);
+        //add/buy
+        if (strcmp(command, "buy") == 0) {
+            scanf("%s %d", name, &numTickets);
 
-            //create the node
-            temp_node = create_node(val);
+            //see if person exists
+            temp_node = find(my_root, name);
 
-            //insert the value
-            my_root = insert(my_root, temp_node);
+            //update ticket count
+            if (temp_node != NULL)
+                temp_node->data += numTickets;
+            else {
+                temp_node = create_node(name, numTickets);
+                my_root = insert(my_root, temp_node);
+            }
         }
 
-        if (ans == 2) {
-            printf("What value would you like to delete?\n");
-            scanf("%d", &val);
-            if (!find(my_root, val)) printf("Sorry that value isn't in the tree to delete\n");
-            else my_root = delete(my_root, val);
+        /*
+        //use/delete
+        if (strcmp(command, "use") == 0) {
+            scanf("%s %d", name, &numTickets);
+            if (!find(my_root, name)) printf("%s not found\n", name);
+            else my_root = delete(my_root, name, numTickets);
         }
-
-        if (ans == 3) {
+        //find/search
+        if (strcmp(command, "find") == 0) {
             printf("What value would you like to search for?\n");
             scanf("%d", &val);
             if (find(my_root, val)) printf(" Found %d in the tree\n", val);
             else printf(" Did not find %d in the tree\n", val);
         }
-
-        if (ans == 4) printf("The sum of the nodes in your tree is %d\n", add(my_root));
-
-        if (ans == 5) {
+        //mean
+        if (strcmp(command, "mean_tickets") == 0) printf("%f\n", add(my_root));
+        
+        if (strcmp(command, "height_balance") == 0) {
             //print the resulting tree
             printf("Here is an inorder traversal of your tree: ");
             inorder(my_root);
             printf("\n");
         }
-
-        if (ans == 7) {
+        
+        if (strcmp(command, "count_before") == 0) {
             //print the resulting tree
             printf("enter a value for q6: ");
             scanf("%d", &q6data);
             printf("Q6: ");
             q6(my_root, q6data );
             printf("\n");
-        }
-
-        //see if they want to insert more nodes
-        ans = menu();
+        }*/
     }
     /*
     printf("Testing what function\n\n");
     what(my_root, 7);
     printf("\n");
     */
-    int rank;
+    /*int rank;
     printf("Which ranked item would you like to find?\n");
     scanf("%d", &rank);
-    printf("The item is %d\n", findKthSmallest(my_root, rank));
+    //printf("The item is %d\n", findKthSmallest(my_root, rank));
     system("PAUSE");
-
+*/
     return 0;
 }
-
+/*
 void inorder(struct tree_node *current_ptr) {
     //only traverse the node if it's not null
     if (current_ptr != NULL) {
@@ -113,14 +120,18 @@ void inorder(struct tree_node *current_ptr) {
         inorder(current_ptr->right);
     }
 }
-
-struct tree_node* insert(struct tree_node *root,struct tree_node *element) {
+*/
+//insert new struct into big struct
+struct tree_node* insert(struct tree_node *root, struct tree_node *element) {
     //inserting into an empty tree
     if (root == NULL){
-        printf("Element data %d -> address: %p\n", element->data, &(element->data));
+        //name, numTickets, height in tree
+        printf("%s %d %d\n", element->name, element->data, element->data);
         return element;
     }
     else {
+        printf("%s %d %d\n", element->name, element->data, element->data);
+
         //element should be inserted to the right
         if (element->data > root->data) {
             //there is a right subtree to insert the node
@@ -140,30 +151,35 @@ struct tree_node* insert(struct tree_node *root,struct tree_node *element) {
     }
 }
 
-struct tree_node* create_node(int val) {
+//create a place for the person and tickets
+struct tree_node* create_node(char* name, int numTickets) {
     //allocate space for the node, set the fields
     struct tree_node* temp;
     temp = (struct tree_node*)malloc(sizeof(struct tree_node));
-    temp->data = val;
+    temp->data = numTickets;
+    temp->name = name;
     temp->left = NULL;
     temp->right = NULL;
+
     //return a pointer to the created node
     return temp;
 }
 
-int find(struct tree_node *current_ptr, int val) {
+int find(struct tree_node *current_ptr, char* name) {
     //check if there are nodes in the tree
     if (current_ptr != NULL) {
         //found the value at the root
-        if (current_ptr->data == val) return 1;
+        if (strcmp(current_ptr->name, name) == 0) return 1;
         //search to the left
-        if (val < current_ptr->data) return find(current_ptr->left, val);
+        if (strcmp(name, current_ptr->name) < 0) return find(current_ptr->left, name);
         //or search to the right
-        else return find(current_ptr->right, val);
+        else return find(current_ptr->right, name);
     }
-    else return 0;
+    else return NULL;
 }
-
+/*
+//finds what came before certain name
+//MODIFY FOR TICKETSSSSSSSSS
 void what(struct tree_node *root, int val) {
     if (root != NULL) {
         if (root->data > val) printf("%d ", root->data+val);
@@ -172,8 +188,9 @@ void what(struct tree_node *root, int val) {
     }
 }
 
+//adds new person
 int add(struct tree_node *current_ptr) {
-    if (current_ptr != NULL) return current_ptr->data+add(current_ptr->left)+add(current_ptr->right);
+    if (current_ptr != NULL) return current_ptr->+add(current_ptr->left)+add(current_ptr->right);
     else return 0;
 }
 
@@ -245,12 +262,12 @@ struct tree_node* findNode(struct tree_node *current_ptr, int value) {
 //will delete the node storing value in the tree rooted at root The
 //value must be present in the tree in order for this function to work
 //the function returns a pointer to the root of the resulting tree
-struct tree_node* delete(struct tree_node* root, int value) {
+struct tree_node* delete(struct tree_node* root, char name[], int numTickets) {
     struct tree_node *delnode, *new_del_node, *save_node;
     struct tree_node *par;
     int save_val;
     //get a pointer to the node to delete
-    delnode = findNode(root, value);
+    delnode = findNode(root, name);
     //get the parent of this node
     par = parent(root, delnode);
     //take care of the case where the node to delete is a leaf node
@@ -263,7 +280,7 @@ struct tree_node* delete(struct tree_node* root, int value) {
             return NULL;
         }
         //deletes the node if it's a left child
-        if (value < par->data) {
+        if (name < par->data) {
             //free the memory for the node
             free(par->left);
             par->left = NULL;
@@ -343,8 +360,10 @@ struct tree_node* delete(struct tree_node* root, int value) {
     delnode->data = save_val;
     return root;
 }
+*/
 
 /*** NEW FUNCTION ADDED - EDIT AND PUT IN FRAMEWORK ***/
+/*
 struct tree_node* q6(struct tree_node* root, int x) {
     if (root == NULL) return NULL;
     if (root->data > x) {
@@ -375,21 +394,5 @@ int findKthSmallest(struct tree_node* root, int k) {
     if (numNodesLeft >= k) return findKthSmallest(root->left, k);
     else if (numNodesLeft == k-1) return root->data;
     else return findKthSmallest(root->right, k-numNodesLeft-1);
-}
-
-/*
-//prints out the menu of choices for the user and returns their choice
-int menu() {
-    int ans;
-    printf("Here are your choices\n");
-    printf("1. Insert an item into your tree\n");
-    printf("2. Delete an item from your tree\n");
-    printf("3. Search for an item in your tree\n");
-    printf("4. Print the sum of the nodes in your tree\n");
-    printf("5. Print out an inorder traversal of your tree\n");
-    printf("7. Call Q6\n");
-    printf("6. Quit\n");
-    scanf("%d", &ans);
-    return ans;
 }
 */
