@@ -16,11 +16,10 @@ struct tree_node {
 
 //function calls
 int add(struct tree_node *current_ptr);
-int isBalanced(struct tree_node *root, struct tree_node *my_root);
-int height(struct tree_node* node, struct tree_node* my_root);
-int find(struct tree_node *current_ptr, char* name);
+int isBalanced(struct tree_node *root);
+int height(struct tree_node* node);
 struct tree_node* insert(struct tree_node *root, struct tree_node *element);
-struct tree_node* findNode(struct tree_node *current_ptr, char* name);
+struct tree_node* findNode(struct tree_node *current_ptr, char* name, int* depth);
 struct tree_node* delete(struct tree_node* root, char* name, int numTickets);
 struct tree_node *create_node(char* name, int numTickets);
 void inorder(struct tree_node *current_ptr);
@@ -37,33 +36,21 @@ int findKthSmallest(struct tree_node* root, int k);
 
 int main() {
     struct tree_node *my_root = NULL, *temp_node;
-
     char command[31];
     char name[31];
-    int num_commands, numTickets, sum = 0, numNodes = 0;
+    int num_commands, numTickets, depth = 0;
     scanf("%d", &num_commands);
     //takes in information
     for (int i = 0; i < num_commands; i++) {
+        depth = 0;
         scanf("%s", command);
 
         //add/buy
         if (strcmp(command, "buy") == 0) {
             scanf("%s %d", name, &numTickets);
 
-            //make root
-            if (my_root == NULL)
-            {
-                my_root = malloc(sizeof(struct tree_node));
-
-                strcpy(my_root->name, name);
-                my_root->left = NULL;
-                my_root->right = NULL;
-                my_root->data = numTickets;
-                printf("%s %d %d\n", my_root->name, my_root->data, height(my_root, my_root));
-            }
-
             //see if person exists
-            temp_node = findNode(my_root, name);
+            temp_node = findNode(my_root, name, depth);
 
             //update ticket count if it exists
             if (temp_node != NULL) temp_node->data += numTickets;
@@ -73,6 +60,7 @@ int main() {
                 temp_node = create_node(name, numTickets);
                 my_root = insert(my_root, temp_node);
             }
+            printf("%s %d %d\n", name, numTickets, height(my_root));
         }
 
         //use/delete
@@ -80,35 +68,33 @@ int main() {
             scanf("%s %d", name, &numTickets);
 
             //check using find
-            if (find(my_root, name) == 0) printf("%s deleted\n", name);
-            else my_root = delete(my_root, name, numTickets);
+            if (findNode(my_root, name, depth) == 0) printf("%s deleted\n", name);
+            else delete(my_root, name, numTickets);
         }
 
         //find/search
         if (strcmp(command, "find") == 0) {
             scanf("%s", name);
+
             //search
-            if (findNode(my_root, name)) printf("%s %d %d\n", name, findNode(my_root, name)->data, height(my_root, my_root));
+            temp_node = findNode(my_root, name, depth);
+            if (temp_node) printf("%s %d %d\n", name, temp_node->data, depth);
             else printf("%s not found\n", name);
         }
 
         //mean
-        if (strcmp(command, "mean_tickets") == 0) printf("%.2f\n", sum/numNodes);
+        if (strcmp(command, "mean_tickets") == 0) printf("%.2f\n", (add(my_root) * 1.0)/numnodes(my_root));
 
         //height of branches
-        if (strcmp(command, "height_balance") == 0) isBalanced(my_root, my_root);
+        if (strcmp(command, "height_balance") == 0) isBalanced(my_root);
 
         //finding tickets before person
         if (strcmp(command, "count_before") == 0) {
             scanf("%s", name);
+
             //print total
             printf("%d\n", what(my_root, name));
         }
-
-        //keep total tickets updated
-        sum += numTickets;
-        numNodes = numnodes(my_root);
-        printf("sum = %d, nodes = %d\n", sum, numNodes);
     }
     inorder(my_root);
     free(my_root);
@@ -116,33 +102,30 @@ int main() {
 }
 
 //check if function is balanced
-int isBalanced(struct tree_node *root, struct tree_node *my_root) {
+int isBalanced(struct tree_node *root) {
     //no nodes
     if (root == NULL) return 1;
 
     //calculate height
-    int left_height = height(root->left, my_root);
-    int right_height = height(root->right, my_root);
+    int left_height = height(root->left);
+    int right_height = height(root->right);
 
     //balanced
-    if (abs(left_height - right_height) < 0) printf("left height = %d right height = %d balanced\n", left_height, right_height);
+    if (left_height - right_height == 0) printf("left height = %d right height = %d balanced\n", left_height, right_height);
 
     //unbalanced
     else printf("left height = %d right height = %d not balanced\n", left_height, right_height);
     return 0;
 }
 
-//I need my_root to work
 //find height of tree
-int height(struct tree_node* root, struct tree_node* my_root) {
+int height(struct tree_node* root) {
     //check root
-    if (my_root == NULL) return -1;
-    //THIS IS SO I CAN CODE MORE
-    else return 0;
+    if (root == NULL) return -1;
 
     //find heights
-    int leftHeight = height(root->left, my_root);
-    int rightHeight = height(root->right, my_root);
+    int leftHeight = height(root->left);
+    int rightHeight = height(root->right);
 
     //compare heights
     if (leftHeight > rightHeight) return 1 + leftHeight;
@@ -169,10 +152,8 @@ struct tree_node* insert(struct tree_node *root, struct tree_node *element) {
     //inserting into an empty tree
     if (root == NULL) return element;
 
-    printf("%s %d %d\n", element->name, element->data, height(element, root));
-
     //element should be inserted to the right
-    if (element->data > root->data) {
+    if (strcmp(element->name, root->name) > 0) {
         //there is a right subtree to insert the node
         if (root->right != NULL) root->right = insert(root->right, element);
 
@@ -209,23 +190,6 @@ struct tree_node* create_node(char* name, int numTickets) {
 
     //return a pointer to the created node
     return temp;
-}
-
-//find name
-int find(struct tree_node *current_ptr, char* name) {
-    //check if there are nodes in the tree
-    if (current_ptr != NULL) {
-        //found the value at the root
-        if (strcmp(current_ptr->name, name) == 0) return current_ptr->data;
-
-        //search to the left
-        if (strcmp(name, current_ptr->name) < 0) return find(current_ptr->left, name);
-
-        //or search to the right
-        return find(current_ptr->right, name);
-    }
-    //not there
-    return 0;
 }
 
 //find out how many tickets are before a name
@@ -311,18 +275,21 @@ int hasOnlyRightChild(struct tree_node *node) {
 
 //returns a pointer to a node that stores value in it in the subtree
 //pointed to by current_ptr NULL is returned if no such node is found
-struct tree_node* findNode(struct tree_node *current_ptr, char* name) {
+struct tree_node* findNode(struct tree_node *current_ptr, char* name, int* depth) {
     //check input exists
     if (current_ptr == NULL) return NULL;
 
     //find the value at the root
     if (strcmp(current_ptr->name, name) == 0) return current_ptr;
 
+    //increment depth
+    depth++;
+
     //search left
-    if (strcmp(name, current_ptr->name) < 0) return findNode(current_ptr->left, name);
+    if (strcmp(name, current_ptr->name) < 0) return findNode(current_ptr->left, name, depth);
 
     //search right
-    return findNode(current_ptr->right, name);
+    return findNode(current_ptr->right, name, depth);
 }
 
 //will delete the node storing value in the tree rooted at root The
@@ -331,10 +298,10 @@ struct tree_node* findNode(struct tree_node *current_ptr, char* name) {
 struct tree_node* delete(struct tree_node* root, char* name, int numTickets) {
     struct tree_node *delnode, *new_del_node, *save_node;
     struct tree_node *par;
-    int save_val;
+    int save_val, depth = 0;
 
     //get a pointer to the node to delete and check if customer exists
-    delnode = findNode(root, name);
+    delnode = findNode(root, name, depth);
     if (delnode == NULL)
     {
         printf("%s not found\n", name);
@@ -440,8 +407,8 @@ struct tree_node* delete(struct tree_node* root, char* name, int numTickets) {
     delnode->data = save_val;
 
     //print stuff
-    delnode = findNode(root, name);
-    if (delnode) printf("%s %d %d\n", name, delnode->data, height(root, root));
+    delnode = findNode(root, name, depth);
+    if (delnode) printf("%s %d %d\n", name, delnode->data, height(root));
     else printf("%s deleted\n", name);
     return root;
 }
