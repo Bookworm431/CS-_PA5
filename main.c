@@ -31,13 +31,12 @@ int hasOnlyLeftChild(struct tree_node* node);
 int hasOnlyRightChild(struct tree_node* node);
 int what(struct tree_node* root, char name[]);
 int numnodes(struct tree_node* root);
-int find(struct tree_node* current_ptr, int val);
 
 int main() {
     struct tree_node *my_root = NULL, *temp_node;
     char command[31];
     char name[31];
-    int num_commands, numTickets, depth, exist = 0;
+    int num_commands, numTickets, depth;
     scanf("%d", &num_commands);
     //takes in information
     for (int i = 0; i < num_commands; i++) {
@@ -67,9 +66,7 @@ int main() {
             scanf("%s %d", name, &numTickets);
 
             //see if person exists
-            exist = find(my_root, numTickets);
             temp_node = findNode(my_root, name, &depth);
-            //if (exist == 0) printf("%s not found\n", name);
 
             //check using find
             if (temp_node != NULL) temp_node->data -= numTickets;
@@ -77,7 +74,7 @@ int main() {
             {
                 //check if there's no tickets
                 printf("%s deleted\n", name);
-                my_root  = delete(my_root, name);
+                //my_root = delete(my_root, name);
             }
             else printf("%s %d %d\n", name, temp_node->data, depth);
         }
@@ -109,27 +106,11 @@ int main() {
     return 0;
 }
 
-//using for delete
-int find(struct tree_node* current_ptr, int val) {
-    //check if there are nodes in the tree
-    if (current_ptr != NULL) {
-        //found the value at the root
-        if (current_ptr->data == val) return 1;
-
-        //search to the left
-        if (val < current_ptr->data) return find(current_ptr->left, val);
-
-        //search to the right
-        return find(current_ptr->right, val);
-    }
-    return 0;
-}
-
 //returns a pointer to a node that stores value in it in the subtree
 //pointed to by current_ptr NULL is returned if no such node is found
 struct tree_node* findNode(struct tree_node* current_ptr, char name[], int* depth) {
     //check input exists
-    if (current_ptr == NULL) return current_ptr;
+    if (current_ptr == NULL) return NULL;
 
     //find the value at the root
     if (strcmp(current_ptr->name, name) == 0) return current_ptr;
@@ -256,16 +237,16 @@ int add(struct tree_node* current_ptr) {
 //the tree, NULL will be returned
 struct tree_node* parent(struct tree_node* root, struct tree_node* node) {
     //take care of NULL cases
-    if (root == NULL || root == node) return NULL;
+    if (root == NULL || strcmp(root, node) == 0) return NULL;
 
     //the root is the direct parent of node
-    if (root->left == node || root->right == node) return root;
+    if ((strcmp(root->left, node) == 0) || (strcmp(root->right, node) == 0)) return root;
 
     //look for node's parent on the left side of the tree
-    if (node->data < root->data) return parent(root->left, node);
+    if (strcmp(node->name, root->name) < 0) return parent(root->left, node);
 
     //look for node's parent on the right side of the tree
-    else if (node->data > root->data) return parent(root->right, node);
+    else if (strcmp(node->name, root->name) > 0) return parent(root->right, node);
 
     //catch other cases
     return NULL;
@@ -298,14 +279,14 @@ int isLeaf(struct tree_node* node) {
 
 //returns 1 iff node has a left child and no right child
 int hasOnlyLeftChild(struct tree_node* node) {
-    return (node->left!= NULL && node->right == NULL);
+    return (node->left != NULL && node->right == NULL);
 }
 
 //returns 1 iff node has a right child and no left child
 int hasOnlyRightChild(struct tree_node* node) {
     return (node->left == NULL && node->right != NULL);
 }
-/*
+
 //will delete the node storing value in the tree rooted at root The
 //value must be present in the tree in order for this function to work
 //the function returns a pointer to the root of the resulting tree
@@ -409,69 +390,20 @@ struct tree_node* delete(struct tree_node* root, char name[]){
         return root;
     }
 
-    //if your code reaches hear it means delnode has two children find the new physical node to delete
+    //if your code reaches here it means delnode has two children find the new physical node to delete
     new_del_node = maxVal(delnode->left);
     save_val = new_del_node->data;
     char savename[31];
     strcpy(savename, new_del_node->name);
 
     //now, delete the proper value
-    delete(root, savename);
+    //delete(root, savename);
+    printf("%s\n", savename);
 
     //restore the data to the original node to be deleted
     delnode->data = save_val;
     strcpy(delnode->name, savename);
 
-    return root;
-}
-*/
-struct tree_node* delete(struct tree_node* root, char name[]){
-    struct tree_node* delnode, *new_del_node, *save_node;
-    struct tree_node* par;
-    int save_val, depth = 0;
-
-    delnode = findNode(root, name, &depth);
-    if (delnode == NULL) return root;
-
-    par = parent(root, delnode);
-
-    // Case 1: Leaf Node
-    if (isLeaf(delnode)) {
-        if (par == NULL) {
-            free(root);
-            return NULL;
-        }
-        if (strcmp(name, par->name) < 0) par->left = NULL;
-        else par->right = NULL;
-        free(delnode);
-        return root;
-    }
-
-    // Case 2: Only Left Child
-    if (hasOnlyLeftChild(delnode)) {
-        save_node = delnode->left;
-        if (par == NULL) root = save_node;
-        else if (strcmp(name, par->name) < 0) par->left = save_node;
-        else par->right = save_node;
-        free(delnode);
-        return root;
-    }
-
-    // Case 3: Only Right Child
-    if (hasOnlyRightChild(delnode)) {
-        save_node = delnode->right;
-        if (par == NULL) root = save_node;
-        else if (strcmp(name, par->name) < 0) par->left = save_node;
-        else par->right = save_node;
-        free(delnode);
-        return root;
-    }
-
-    // Case 4: Two Children
-    new_del_node = maxVal(delnode->left); // Find max from left subtree
-    strcpy(delnode->name, new_del_node->name);
-    delnode->data = new_del_node->data;
-    root = delete(root, new_del_node->name); // Recursively delete duplicate
     return root;
 }
 
