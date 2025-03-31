@@ -16,6 +16,7 @@ struct tree_node {
 
 //function calls
 int add(struct tree_node* current_ptr);
+void freeTree(struct tree_node* my_root);
 int isBalanced(struct tree_node* root);
 int height(struct tree_node* node);
 struct tree_node* insert(struct tree_node* root, struct tree_node* element);
@@ -72,8 +73,8 @@ int main() {
             if (temp_node != NULL) temp_node->data -= numTickets;
             else printf("%s not found\n", name);
 
-            if (temp_node->data <= 0) delete(my_root, name);
-            else printf("%s %d %d\n", name, temp_node->data, depth);
+            //if (temp_node->data <= 0) delete(my_root, name);
+            printf("%s %d %d\n", name, temp_node->data, depth);
         }
 
         //find/search
@@ -100,7 +101,16 @@ int main() {
             printf("%d\n", what(my_root, name));
         }
     }
+    freeTree(my_root);
     return 0;
+}
+
+//free my_root
+void freeTree(struct tree_node* my_root) {
+    if (my_root == NULL) return;
+    freeTree(my_root->left);
+    freeTree(my_root->right);
+    free(my_root);
 }
 
 //returns a pointer to a node that stores value in it in the subtree
