@@ -70,12 +70,9 @@ int main() {
 
             //check using find
             if (temp_node != NULL) temp_node->data -= numTickets;
-            if (temp_node->data <= 0)
-            {
-                //check if there's no tickets
-                printf("%s deleted\n", name);
-                //my_root = delete(my_root, name);
-            }
+            else printf("%s not found\n", name);
+
+            if (temp_node->data <= 0) delete(my_root, name);
             else printf("%s %d %d\n", name, temp_node->data, depth);
         }
 
@@ -290,98 +287,95 @@ int hasOnlyRightChild(struct tree_node* node) {
 //will delete the node storing value in the tree rooted at root The
 //value must be present in the tree in order for this function to work
 //the function returns a pointer to the root of the resulting tree
-struct tree_node* delete(struct tree_node* root, char name[]){
-    //if (root == NULL) return root;
-    struct tree_node* delnode, *new_del_node, *save_node;
-    struct tree_node* par;
+struct tree_node* delete(struct tree_node* root, char name[]) {
+    struct tree_node *delnode, *new_del_node, *save_node;
+    struct tree_node *par;
     int save_val, depth = 0;
+    char save_name[31];
 
-    //get a pointer to the node to delete and check if customer exists
+    //pointer to node to delete
     delnode = findNode(root, name, &depth);
 
-    if (delnode == NULL) return root;
-
-    //get the parent of this node
+    //parent
     par = parent(root, delnode);
 
-    //take care of the case where the node to delete is a leaf node
-    //case 1
+    //node to delete is a leaf node
     if (isLeaf(delnode)) {
         //deleting the only node in the tree
         if (par == NULL) {
-            //free the memory for the node
+            //free
             free(root);
             return NULL;
         }
-        //deletes the node if it's a left child
+
+        //left child
         if (strcmp(name, par->name) < 0) {
-            //free the memory for the node
+            //free
             free(par->left);
             par->left = NULL;
         }
 
-        //deletes the node if it's a right child
+        //right child
         else {
-            //free the memory for the node
+            //free
             free(par->right);
             par->right = NULL;
         }
-        //return the root of the new tree
+        //return root
         return root;
     }
-    //take care of the case where the node to be deleted only has a left child
+
+    //only has a left child
     if (hasOnlyLeftChild(delnode)) {
-        //deleting the root node of the tree
+        //deleting root node of the tree
         if (par == NULL) {
             save_node = delnode->left;
 
-            //free the node to delete
+            //free node to delete & return new root
             free(delnode);
-
-            //return the new root node of the resulting tree
             return save_node;
         }
+
         //deletes the node if it's a left child
         if (strcmp(name, par->name) < 0) {
-            //save the node to delete
+            //save node to delete
             save_node = par->left;
-
-            //readjust the parent pointer
+            //readjust parent pointer
             par->left = par->left->left;
-
-            //free the memory for the deleted node
+            //free memory of deleted node
             free(save_node);
         }
+
         //deletes the node if it's a right child
         else {
-            //save the node to delete
+            //save node to delete
             save_node = par->right;
-
-            //readjust the parent pointer
+            //readjust parent pointer
             par->right = par->right->left;
-
-            //free the memory for the deleted node
+            //free deleted node memory
             free(save_node);
         }
-        //return the root of the tree after the deletion
+        //return root after deletion
         return root;
     }
 
-    //takes care of the case where the deleted node only has a right child
+    //deleted node only has a right child
     if (hasOnlyRightChild(delnode)) {
-        //node to delete is the root node
+        //delete root node
         if (par == NULL) {
             save_node = delnode->right;
             free(delnode);
             return save_node;
         }
-        //deletes the node if it is a left child
+
+        //left child node deletion
         if (strcmp(name, par->name) < 0) {
             save_node = par->left;
             par->left = par->left->right;
             free(save_node);
         }
-        //deletes the node if it is a right child
+
+        //right child node deletion
         else {
             save_node = par->right;
             par->right = par->right->right;
@@ -390,20 +384,16 @@ struct tree_node* delete(struct tree_node* root, char name[]){
         return root;
     }
 
-    //if your code reaches here it means delnode has two children find the new physical node to delete
+    //delnode has 2 kids
+    //find new node to delete
     new_del_node = maxVal(delnode->left);
-    save_val = new_del_node->data;
-    char savename[31];
-    strcpy(savename, new_del_node->name);
+    strcpy(save_name, new_del_node->name);
 
-    //now, delete the proper value
-    //delete(root, savename);
-    printf("%s\n", savename);
+    //delete proper value
+    delete(root, save_name);
 
     //restore the data to the original node to be deleted
-    delnode->data = save_val;
-    strcpy(delnode->name, savename);
-
+    strcpy(delnode->name, save_name);
     return root;
 }
 
